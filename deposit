@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# script to deposit cUSD epoch rewards into moola
+
+# assumptions: (1) "celocli" is installed, and moola "cli" is installed
+#              (2) $CELO_VALIDATOR_GROUP_RG_ADDRESS is defined
+#              (3) $CELO_BANK is defined, and key is on this node to be unlocked
+#              (4) $CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3 is defined, and key is on this node to be unlocked
+#                  (this is the beneficiary address for $CELO_VALIDATOR_GROUP_RG_ADDRESS)
+
+# I have named this script "deposit" and put in $HOME/bin
+# make sure its location is in your $PATH or call it using its full path
+
+echo "unlocking \$CELO_BANK"
+celocli account:unlock $CELO_BANK
+echo "unlocking \$CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3"
+celocli account:unlock $CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3
+
+# get cusd balance from celocli command
+cusd=`celocli account:balance $CELO_VALIDATOR_GROUP_RG_ADDRESS | grep USD: | cut -d: -f2`
+echo "cUSD (wei) = $cusd"
+# this perl one-liner rounds down to integer value for moola cli deposit command
+dollarbalance=`perl -e 'printf("%10d",$ARGV[0]*1e-18)' $cusd`
+echo "cUSD balance (dollars) to be deposited is: $dollarbalance"
+
+echo "executing: celocli releasegold:transfer-dollars --contract \$CELO_VALIDATOR_GROUP_RG_ADDRESS --to \$CELO_BANK --value $cusd"
+celocli releasegold:transfer-dollars --contract $CELO_VALIDATOR_GROUP_RG_ADDRESS --to $CELO_BANK --value $cusd
+echo "executing: cd $HOME/moola/aave-protocol && node cli http://localhost:8545 deposit cusd \$CELO_BANK $dollarbalance"
+cd $HOME/moola/aave-protocol && node cli http://localhost:8545 deposit cusd $CELO_BANK $dollarbalance
+
+echo "locking \$CELO_BANK"
+celocli account:lock $CELO_BANK
+echo "locking \$CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3"
+celocli account:lock $CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3

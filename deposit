@@ -11,6 +11,10 @@
 # I have named this script "deposit" and put in $HOME/bin
 # make sure its location is in your $PATH or call it using its full path
 
+CELO_BANK=""
+CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3=""
+CELO_VALIDATOR_GROUP_RG_ADDRESS=""
+
 echo "unlocking \$CELO_BANK"
 celocli account:unlock $CELO_BANK
 echo "unlocking \$CELO_RELEASE_GOLD_BENEFICIARY_ADDRESS_3"
